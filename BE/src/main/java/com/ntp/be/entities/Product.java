@@ -39,6 +39,9 @@ public class Product {
     private Float rating;
 
     @Column(nullable = false)
+    private boolean isNewArrival;
+
+    @Column(nullable = false)
     private String slug;
 
     @Column(nullable = false, updatable = false)

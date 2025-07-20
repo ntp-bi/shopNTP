@@ -30,5 +30,5 @@ public class Category {
     private String description;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
-    private List<CategoryType> categories;
+    private List<CategoryType> categoryTypes;
 }
