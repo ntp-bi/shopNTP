@@ -27,7 +27,7 @@ public class ProductVariant {
     private String size;
 
     @Column(nullable = false)
-    private String stockQuantity;
+    private Integer stockQuantity;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
