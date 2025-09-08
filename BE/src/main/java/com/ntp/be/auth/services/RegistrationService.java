@@ -43,20 +43,22 @@ public class RegistrationService {
 
             String code = VerificationCodeGenerator.generateCode();
             user.setVerificationCode(code);
-            user.setAuthorities(authorityService.getUserAuthority());
+            user.setAuthorities(authorityService.getUserAuthorities());
             userDetailRepository.save(user);
 
             emailService.sendMail(user);
 
             return RegistrationResponse.builder().code(200).message("Registration successful").build();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
             throw new ServiceException(e.getMessage(), e.getCause());
         }
     }
 
     public void verifyUser(String userName) {
-        User user= userDetailRepository.findByEmail(userName);
+        User user = userDetailRepository.findByEmail(userName);
+        if (user == null) {
+            throw new ServiceException("User not found: " + userName);
+        }
         user.setEnabled(true);
         userDetailRepository.save(user);
     }

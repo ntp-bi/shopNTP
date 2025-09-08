@@ -5,11 +5,15 @@ import com.ntp.be.auth.dto.LoginRequest;
 import com.ntp.be.auth.dto.RegistrationRequest;
 import com.ntp.be.auth.dto.RegistrationResponse;
 import com.ntp.be.auth.dto.UserToken;
+import com.ntp.be.auth.entities.Authority;
 import com.ntp.be.auth.entities.User;
+import com.ntp.be.auth.services.AuthorityService;
 import com.ntp.be.auth.services.RegistrationService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,6 +21,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -31,6 +36,9 @@ public class AuthController {
 
     @Autowired
     private UserDetailsService userDetailsService;
+
+    @Autowired
+    private AuthorityService authorityService;
 
     @Autowired
     private JWTTokenHelper jwtTokenHelper;
@@ -85,5 +93,11 @@ public class AuthController {
         }
 
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    public ResponseEntity<List<Authority>> getAllAuthorities(HttpServletResponse httpServletResponse) {
+        return new ResponseEntity<>(authorityService.getAllAuthorities(), HttpStatus.OK);
     }
 }

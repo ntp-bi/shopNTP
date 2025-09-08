@@ -7,6 +7,7 @@ import com.ntp.be.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -40,6 +41,7 @@ public class OrderController {
     }
 
     @PostMapping("/update-payment")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updatePaymentStatus(@RequestBody Map<String, String> map) {
         Map<String, String> response = orderService.updateStatus(map.get("paymentIntent"), map.get("status"));
         return new ResponseEntity<>(response, HttpStatus.OK);

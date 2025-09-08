@@ -8,6 +8,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -19,29 +20,58 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // 🔑 bật phân quyền theo annotation (@PreAuthorize)
 public class WebSecurityConfig {
+
     @Autowired
     private UserDetailsService userDetailsService;
 
     @Autowired
     private JWTTokenHelper jwtTokenHelper;
 
-    private static final String[] publicApis = {
-            "/api/auth/**"
+    private static final String[] PUBLIC_APIS = {
+            "/api/auth/**",          // register, login, verify
+            "/oauth2/success",
+            "/v3/api-docs/**"
     };
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/v3/api-docs/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/products", "/api/category").permitAll()
-                        .requestMatchers("/oauth2/success").permitAll()
-                        .requestMatchers(publicApis).permitAll()
-                        .anyRequest().authenticated())
-                .oauth2Login((oauth2login) -> oauth2login.defaultSuccessUrl("/oauth2/success").loginPage("/oauth2/authorization/google"))
-                .exceptionHandling((exception) -> exception.authenticationEntryPoint(new RESTAuthenticationEntryPoint()))
-                .addFilterBefore(new JWTAuthenticationFilter(jwtTokenHelper, userDetailsService), UsernamePasswordAuthenticationFilter.class);
+                        // ✅ public API (auth, oauth2)
+                        .requestMatchers(PUBLIC_APIS).permitAll()
+
+                        // ✅ Products & Categories: GET ai cũng xem được
+                        .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/categories/**").permitAll()
+
+                        // ✅ Products & Categories: POST/PUT/DELETE → cần login -> ADMIN
+                        .requestMatchers(HttpMethod.POST, "/api/products/**", "/api/categories/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/products/**", "/api/categories/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/products/**", "/api/categories/**").authenticated()
+
+                        // ✅ Address & Order: USER hoặc ADMIN
+                        .requestMatchers("/api/address/**", "/api/order/**").hasAnyRole("USER", "ADMIN")
+
+                        // ✅ User API: USER hoặc ADMIN
+                        .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
+
+                        // ✅ còn lại thì phải login
+                        .anyRequest().authenticated()
+                )
+                // OAuth2 login config
+                .oauth2Login((oauth2login) ->
+                        oauth2login.defaultSuccessUrl("/oauth2/success")
+                                .loginPage("/oauth2/authorization/google")
+                )
+                // Xử lý exception
+                .exceptionHandling((exception) ->
+                        exception.authenticationEntryPoint(new RESTAuthenticationEntryPoint())
+                )
+                // Thêm JWT filter
+                .addFilterBefore(new JWTAuthenticationFilter(jwtTokenHelper, userDetailsService),
+                        UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
@@ -50,9 +80,7 @@ public class WebSecurityConfig {
         DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
         daoAuthenticationProvider.setUserDetailsService(userDetailsService);
         daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
-
         return new ProviderManager(daoAuthenticationProvider);
-
     }
 
     @Bean
