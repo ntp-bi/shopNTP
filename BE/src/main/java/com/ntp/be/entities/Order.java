@@ -34,6 +34,9 @@ public class Order {
     @JsonIgnore
     private Address address;
 
+    @Column(nullable = false)
+    private Double totalAmount;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus orderStatus;

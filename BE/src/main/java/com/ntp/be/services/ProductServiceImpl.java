@@ -44,7 +44,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         if (typeId != null) {
-            productSpecification = productSpecification.and(ProductSpecification.hasCategoryId(typeId));
+            productSpecification = productSpecification.and(ProductSpecification.hasCategoryTypeId(typeId));
         }
 
         List<Product> products = productRepository.findAll(productSpecification);
