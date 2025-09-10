@@ -11,12 +11,12 @@ import java.security.Principal;
 
 @RestController
 @CrossOrigin
-@RequestMapping("/api/user")
+@RequestMapping("/api/ntpshop")
 public class ChangePasswordController {
     @Autowired
     private ChangePasswordService changePasswordService;
 
-    @PutMapping("/change-password")
+    @PutMapping("/user/change-password")
     public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request, Principal principal) {
         try {
             changePasswordService.changePassword(request, principal.getName());

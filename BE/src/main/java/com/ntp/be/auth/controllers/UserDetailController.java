@@ -15,12 +15,12 @@ import java.security.Principal;
 
 @RestController
 @CrossOrigin
-@RequestMapping("/api/user")
+@RequestMapping("/api/ntpshop")
 public class UserDetailController {
     @Autowired
     private UserDetailsService userDetailsService;
 
-    @GetMapping("/profile")
+    @GetMapping("/user/profile")
     public ResponseEntity<UserDetailsDto> getUserProfile(Principal principal) {
         User user = (User) userDetailsService.loadUserByUsername(principal.getName());
 

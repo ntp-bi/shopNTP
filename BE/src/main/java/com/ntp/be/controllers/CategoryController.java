@@ -3,31 +3,32 @@ package com.ntp.be.controllers;
 import com.ntp.be.dto.CategoryDto;
 import com.ntp.be.entities.Category;
 import com.ntp.be.services.CategoryService;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
 @CrossOrigin
-@RequestMapping("/api/categories")
+@RequestMapping("/api/ntpshop")
 public class CategoryController {
 
     @Autowired
     private CategoryService categoryService;
 
-    @GetMapping("/{id}")
+    @GetMapping("/categories/{id}")
     public ResponseEntity<Category> getCategoryById(@PathVariable(value = "id", required = true) UUID categoryId) {
         Category category = categoryService.getCategory(categoryId);
         return new ResponseEntity<>(category, HttpStatus.OK);
     }
 
-    @PostMapping
+    @PostMapping("/categories")
     public ResponseEntity<?> createCategory(@RequestBody CategoryDto categoryDto) {
         try {
             Category category = categoryService.createCategory(categoryDto);
@@ -37,21 +38,23 @@ public class CategoryController {
         }
     }
 
-    @GetMapping
-    public ResponseEntity<List<Category>> getAllCategories(HttpServletResponse httpServletResponse) {
-        List<Category> categories = categoryService.getAllCategories();
-        httpServletResponse.setHeader("Content-Range", String.valueOf(categories.size()));
-        return new ResponseEntity<>(categories, HttpStatus.OK);
+    @GetMapping("/categories")
+    public ResponseEntity<Page<Category>> getAllCategories(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(categoryService.getAllCategories(pageable));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/categories/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Category> updateCategory(@RequestBody CategoryDto categoryDto, @PathVariable(value = "id", required = true) UUID categoryId) {
         Category updateCategory = categoryService.updateCategory(categoryDto, categoryId);
         return new ResponseEntity<>(updateCategory, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/categories/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteCategory(@PathVariable(value = "id", required = true) UUID categoryId) {
         categoryService.deleteCategory(categoryId);

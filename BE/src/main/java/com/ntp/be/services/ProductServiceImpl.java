@@ -9,10 +9,11 @@ import com.ntp.be.repositories.ProductRepository;
 import com.ntp.be.specification.ProductSpecification;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -36,19 +37,17 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductDto> getAllProducts(UUID categoryId, UUID typeId) {
-        Specification<Product> productSpecification = (root, query, cb) -> cb.conjunction();
-
+    public Page<ProductDto> getAllProducts(UUID categoryId, UUID typeId, Pageable pageable) {
+        Specification<Product> spec = (root, query, cb) -> cb.conjunction();
         if (categoryId != null) {
-            productSpecification = productSpecification.and(ProductSpecification.hasCategoryId(categoryId));
+            spec = spec.and(ProductSpecification.hasCategoryId(categoryId));
         }
-
         if (typeId != null) {
-            productSpecification = productSpecification.and(ProductSpecification.hasCategoryTypeId(typeId));
+            spec = spec.and(ProductSpecification.hasCategoryTypeId(typeId));
         }
 
-        List<Product> products = productRepository.findAll(productSpecification);
-        return productMapper.getProductDtos(products);
+        Page<Product> pageResult = productRepository.findAll(spec, pageable);
+        return pageResult.map(productMapper::mapProductToDto);
     }
 
     @Override

@@ -3,8 +3,12 @@ package com.ntp.be.controllers;
 import com.ntp.be.auth.dto.OrderResponse;
 import com.ntp.be.dto.OrderDetails;
 import com.ntp.be.dto.OrderRequest;
+import com.ntp.be.entities.Order;
 import com.ntp.be.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,33 +21,41 @@ import java.util.UUID;
 
 @RestController
 @CrossOrigin
-@RequestMapping("/api/order")
+@RequestMapping("/api/ntpshop")
 public class OrderController {
     @Autowired
     private OrderService orderService;
 
-    @PostMapping
+    @PostMapping("/order")
     public ResponseEntity<?> createOrder(@RequestBody OrderRequest orderRequest, Principal principal) throws Exception {
         OrderResponse orderResponse = orderService.createOrder(orderRequest, principal);
         return new ResponseEntity<>(orderResponse, HttpStatus.OK);
     }
 
-    @GetMapping("/user")
+    @GetMapping("/order/user")
     public ResponseEntity<List<OrderDetails>> getOrderByUser(Principal principal) {
         List<OrderDetails> orderDetails = orderService.getOrdersByUser(principal.getName());
         return new ResponseEntity<>(orderDetails, HttpStatus.OK);
     }
 
-    @PostMapping("/cancel/{id}")
+    @PostMapping("/order/cancel/{id}")
     public ResponseEntity<?> cancelOrder(@PathVariable UUID id, Principal principal) {
         orderService.cancelOrder(id, principal);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PostMapping("/update-payment")
+    @PostMapping("/admin/order/update-payment")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updatePaymentStatus(@RequestBody Map<String, String> map) {
         Map<String, String> response = orderService.updateStatus(map.get("paymentIntent"), map.get("status"));
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/admin/order")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<Order>> getAllOrders(@RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(orderService.getAllOdOrders(pageable));
     }
 }

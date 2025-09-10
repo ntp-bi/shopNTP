@@ -20,7 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // 🔑 bật phân quyền theo annotation (@PreAuthorize)
+@EnableMethodSecurity
 public class WebSecurityConfig {
 
     @Autowired
@@ -30,7 +30,7 @@ public class WebSecurityConfig {
     private JWTTokenHelper jwtTokenHelper;
 
     private static final String[] PUBLIC_APIS = {
-            "/api/auth/**",          // register, login, verify
+            "/api/ntpshop/auth/**",          // register, login, verify
             "/oauth2/success",
             "/v3/api-docs/**"
     };
@@ -42,19 +42,11 @@ public class WebSecurityConfig {
                         // ✅ public API (auth, oauth2)
                         .requestMatchers(PUBLIC_APIS).permitAll()
 
-                        // ✅ Products & Categories: GET ai cũng xem được
-                        .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/categories/**").permitAll()
-
-                        // ✅ Products & Categories: POST/PUT/DELETE → cần login -> ADMIN
-                        .requestMatchers(HttpMethod.POST, "/api/products/**", "/api/categories/**").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/products/**", "/api/categories/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/products/**", "/api/categories/**").authenticated()
-
-                        // ✅ Address & Order: USER hoặc ADMIN
-                        .requestMatchers("/api/address/**", "/api/order/**").hasAnyRole("USER", "ADMIN")
-
                         // ✅ User API: USER hoặc ADMIN
-                        .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/ntpshop/**").hasAnyRole("USER", "ADMIN")
+
+                        // ✅ User API: ADMIN
+                        .requestMatchers("/api/ntpshop/admin/**").hasRole("ADMIN")
 
                         // ✅ còn lại thì phải login
                         .anyRequest().authenticated()

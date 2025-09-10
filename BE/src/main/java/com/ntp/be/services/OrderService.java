@@ -11,6 +11,8 @@ import com.stripe.model.PaymentIntent;
 import jakarta.transaction.Transactional;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
@@ -165,6 +167,9 @@ public class OrderService {
         } else {
             new RuntimeException("Invalid request");
         }
+    }
 
+    public Page<Order> getAllOdOrders(Pageable pageable) {
+        return orderRepository.findAll(pageable);
     }
 }

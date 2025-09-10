@@ -9,8 +9,10 @@ import com.ntp.be.auth.entities.Authority;
 import com.ntp.be.auth.entities.User;
 import com.ntp.be.auth.services.AuthorityService;
 import com.ntp.be.auth.services.RegistrationService;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,12 +23,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
 @CrossOrigin
-@RequestMapping("/api/auth")
+@RequestMapping("/api/ntpshop")
 public class AuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -43,7 +44,7 @@ public class AuthController {
     @Autowired
     private JWTTokenHelper jwtTokenHelper;
 
-    @PostMapping("/register")
+    @PostMapping("/auth/register")
     public ResponseEntity<RegistrationResponse> register(@RequestBody RegistrationRequest request) {
         RegistrationResponse registrationResponse = registrationService.createUser(request);
         return new ResponseEntity<>(
@@ -52,7 +53,7 @@ public class AuthController {
         );
     }
 
-    @PostMapping("/verify")
+    @PostMapping("/auth/verify")
     public ResponseEntity<?> verifyCode(@RequestBody Map<String, String> map) {
         String userName = map.get("userName");
         String code = map.get("code");
@@ -65,7 +66,7 @@ public class AuthController {
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
-    @PostMapping("/login")
+    @PostMapping("auth/login")
     public ResponseEntity<UserToken> login(@RequestBody LoginRequest loginRequest) {
         try {
             // Tạo đối tượng Authentication
@@ -96,8 +97,9 @@ public class AuthController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping
-    public ResponseEntity<List<Authority>> getAllAuthorities(HttpServletResponse httpServletResponse) {
-        return new ResponseEntity<>(authorityService.getAllAuthorities(), HttpStatus.OK);
+    @GetMapping("/admin/auth")
+    public ResponseEntity<Page<Authority>> getAllAuthorities(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(authorityService.getAllAuthorities(pageable));
     }
 }

@@ -4,20 +4,20 @@ import com.ntp.be.dto.ProductDto;
 import com.ntp.be.entities.Product;
 import com.ntp.be.services.ProductService;
 import io.micrometer.common.util.StringUtils;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
 @CrossOrigin
-@RequestMapping("/api/products")
+@RequestMapping("/api/ntpshop")
 public class ProductController {
     private final ProductService productService;
 
@@ -26,28 +26,29 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @GetMapping
-    public ResponseEntity<List<ProductDto>> getAllProducts(@RequestParam(required = false, name = "categoryId", value = "categoryId") UUID categoryId, @RequestParam(required = false, name = "typeId", value = "typeId") UUID typeId, @RequestParam(required = false) String slug, HttpServletResponse response) {
-        List<ProductDto> productList = new ArrayList<>();
-
+    @GetMapping("/products")
+    public ResponseEntity<Page<ProductDto>> getAllProducts(@RequestParam(required = false, name = "categoryId", value = "categoryId") UUID categoryId,
+                                                           @RequestParam(required = false, name = "typeId", value = "typeId") UUID typeId,
+                                                           @RequestParam(required = false) String slug,
+                                                           @RequestParam(defaultValue = "0") int page,
+                                                           @RequestParam(defaultValue = "10") int size) {
         if (StringUtils.isNotBlank(slug)) {
             ProductDto productDto = productService.getProductBySlug(slug);
-            productList.add(productDto);
+            return new ResponseEntity<>(Page.empty().map(x -> productDto), HttpStatus.OK);
         } else {
-            productList = productService.getAllProducts(categoryId, typeId);
+            Pageable pageable = PageRequest.of(page, size);
+            Page<ProductDto> productList = productService.getAllProducts(categoryId, typeId, pageable);
+            return new ResponseEntity<>(productList, HttpStatus.OK);
         }
-
-        response.setHeader("Content-Range", String.valueOf(productList.size()));
-        return new ResponseEntity<>(productList, HttpStatus.OK);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/products/{id}")
     public ResponseEntity<ProductDto> getProductById(@PathVariable UUID id) {
         ProductDto productDto = productService.getProductById(id);
         return new ResponseEntity<>(productDto, HttpStatus.OK);
     }
 
-    @PostMapping
+    @PostMapping("/products")
     public ResponseEntity<?> createProduct(@RequestBody ProductDto productDto) {
         try {
             Product product = productService.addProduct(productDto);
@@ -57,14 +58,14 @@ public class ProductController {
         }
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/products/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Product> updateProduct(@RequestBody ProductDto productDto, @PathVariable(value = "id", required = true) UUID id) {
         Product product = productService.updateProduct(productDto, id);
         return new ResponseEntity<>(product, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/products/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteProduct(@PathVariable(value = "id", required = true) UUID productId) {
         productService.deleteProduct(productId);

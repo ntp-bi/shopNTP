@@ -3,6 +3,8 @@ package com.ntp.be.auth.services;
 import com.ntp.be.auth.entities.Authority;
 import com.ntp.be.auth.repositories.AuthorityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -45,8 +47,8 @@ public class AuthorityService {
     }
 
     // Lấy tất cả quyền
-    public List<Authority> getAllAuthorities() {
-        return authorityRepository.findAll();
+    public Page<Authority> getAllAuthorities(Pageable pageable) {
+        return authorityRepository.findAll(pageable);
     }
 }
 

@@ -5,6 +5,8 @@ import com.ntp.be.dto.AddressRequest;
 import com.ntp.be.entities.Address;
 import com.ntp.be.repositories.AddressRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
@@ -37,5 +39,9 @@ public class AddressService {
 
     public void deleteAddress(UUID id) {
         addressRepository.deleteById(id);
+    }
+
+    public Page<Address> getAllAddress(Pageable pageable) {
+        return addressRepository.findAll(pageable);
     }
 }
